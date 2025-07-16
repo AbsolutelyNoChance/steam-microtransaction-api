@@ -89,5 +89,24 @@ export default (
     console.log(`Server ${host} started at port:${port}`);
   });
 
+  async function syncSubscriptionStates() {
+    await new SteamRequest(httpclient).steamMicrotransactionGetReport()
+      .then((report) => {
+        //TODO implement this
+        console.log(report);
+      })
+      .catch((err) => {
+        console.error('Error syncing subscription states:', err);
+      });
+  }
+
+  setInterval(
+    function sync() {
+      console.log('Syncing subscription states...');
+      syncSubscriptionStates()
+        .then()
+        .catch(console.error)
+    }, 1000 * 60 * 1) // Gather data every minute
+
   return [app, serverListener];
 };

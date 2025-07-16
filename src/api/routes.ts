@@ -12,20 +12,19 @@ const handleMissingFields = (fields: string[]) => (req, res, next) => {
 };
 
 const validateGetReliableUserInfo: RequestHandler = handleMissingFields(['steamId']);
-const validateCheckAppOwnership: RequestHandler = handleMissingFields(['steamId', 'appId']);
-const validateFinalizePurchase: RequestHandler = handleMissingFields(['appId', 'orderId']);
+const validateCheckAppOwnership: RequestHandler = handleMissingFields(['steamId']);
+const validateFinalizePurchase: RequestHandler = handleMissingFields(['orderId', 'ticket']);
 const validateCheckPurchaseStatus: RequestHandler = handleMissingFields([
-  'appId',
   'orderId',
   'transId',
+  'ticket',
 ]);
 const validateInitPurchase: RequestHandler = handleMissingFields([
-  'appId',
-  'category',
-  'itemDescription',
+  'language',
+  'currency',
   'itemId',
-  'orderId',
   'steamId',
+  'ticket',
 ]);
 
 export default (app: Express): void => {
@@ -47,7 +46,7 @@ export default (app: Express): void => {
    * }
    */
   router.get('/', (_req, res) => {
-    res.status(200).json({ status: true });
+    res.status(200).json({ status: true, message: `API is running ${process.env.NODE_ENV === 'development' ? 'in development mode' : 'in production mode'} ${new Date().toLocaleString()}` });
   });
 
   /**

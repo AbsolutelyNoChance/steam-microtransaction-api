@@ -1,7 +1,10 @@
 import constants from '@src/constants';
+import { subDays } from 'date-fns/subDays';
+import { format } from 'date-fns/format';
 
 import {
   ISteamMicroGetUserInfo,
+  ISteamMicroGetReport,
   ISteamMicroTx,
   ISteamOpenTransaction,
   ISteamOwnershipResponse,
@@ -10,6 +13,7 @@ import {
   ISteamUserRequest,
   ISteamUserTicket,
   SteamOptions,
+  ISteamAuthUserTicket,
 } from './steaminterfaces';
 
 import { HttpClient } from '@src/lib/httpclient';
@@ -21,6 +25,7 @@ export default class SteamRequest {
   constructor(private httpClient: HttpClient) {
     this.options = {
       webkey: constants.webkey,
+      appId: constants.steam_app_id,
       url: 'https://partner.steam-api.com/',
       version: 1,
     };
@@ -39,7 +44,7 @@ export default class SteamRequest {
     const data = {
       key: this.options.webkey,
       steamid: info.steamId,
-      appid: info.appId,
+      appid: this.options.appId,
     };
 
     return await this._get<ISteamOwnershipResponse>('ISteamUser', 'CheckAppOwnership', 2, data);
@@ -49,10 +54,10 @@ export default class SteamRequest {
    * @param info
    * @see https://partner.steamgames.com/doc/webapi/ISteamUserAuth#AuthenticateUserTicket
    */
-  async steamAuthenticateUserTicket(info: ISteamUserTicket): Promise<any> {
+  async steamAuthenticateUserTicket(info: ISteamUserTicket): Promise<ISteamAuthUserTicket> {
     const data = {
       key: this.options.webkey,
-      appid: info.appId,
+      appid: this.options.appId,
       ticket: info.ticket,
     };
 
@@ -74,6 +79,27 @@ export default class SteamRequest {
   }
 
   /**
+   * Get Subscription Reports
+   * @see https://partner.steamgames.com/doc/webapi/ISteamMicroTxn#GetReport
+   */
+  async steamMicrotransactionGetReport(): Promise<ISteamMicroGetReport> {
+    const data = {
+      key: this.options.webkey,
+      appid: this.options.appId,
+      type: 'SUBSCRIPTION',
+      time: '',
+      maxresults: '10000',
+    };
+    const now = new Date();
+    //TODO change this to every minute
+    data.time = format(subDays(now, 5), "yyyy-MM-dd'T'HH:mm:ss'Z'");
+    console.log(data.time);
+
+    return await this._get<ISteamMicroGetReport>(this.interface, 'GetReport', 2, data);
+  }
+
+
+  /**
    * Initialize the microtransaction purchase.
    * If the user has the appid opened, the confirm purchase popup will appear
    * @params _transaction
@@ -86,16 +112,20 @@ export default class SteamRequest {
       key: this.options.webkey,
       orderid: transaction.orderId,
       steamid: transaction.steamId,
-      appid: transaction.appId,
+      appid: this.options.appId,
       itemcount: '1',
-      currency: constants.currency,
-      language: constants.locale,
+      currency: transaction.currency,
+      language: transaction.language,
       usersession: 'client',
-      'itemid[0]': transaction.itemId,
+      'itemid[0]': transaction.itemId.toString(),
       'qty[0]': '1',
-      'amount[0]': transaction.amount + constants.currency,
-      'description[0]': transaction.itemDescription,
-      'category[0]': transaction.category,
+      'amount[0]': transaction.amount.toString(),
+      'description[0]': transaction.description,
+      'category[0]': 'Subscription',
+      'billingtype[0]': 'Steam',
+      'period[0]': transaction.period!,
+      'frequency[0]': transaction.frequency!,
+      'recurringamt[0]': transaction.amount.toString(), //this is "optional" but the API requires it...
     });
 
     return await this._post<ISteamMicroTx>(
@@ -116,7 +146,7 @@ export default class SteamRequest {
     const data = {
       key: this.options.webkey,
       orderid: info.orderId,
-      appid: info.appId,
+      appid: this.options.appId,
       transid: info.transId,
     };
 
@@ -131,13 +161,12 @@ export default class SteamRequest {
    * @see https://partner.steamgames.com/doc/webapi/ISteamMicroTxn#FinalizeTxn
    */
   async steamMicrotransactionFinalizeTransaction(
-    appId: string,
     orderid: string
   ): Promise<ISteamMicroTx> {
     const formData = new URLSearchParams({
       key: this.options.webkey,
       orderid: orderid,
-      appid: appId,
+      appid: this.options.appId,
     });
 
     return await this._post<ISteamMicroTx>(this.interface, 'FinalizeTxn', 2, formData);

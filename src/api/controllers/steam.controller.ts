@@ -1,8 +1,6 @@
 import constants from '@src/constants';
-import { ISteamOpenTransaction, ISteamTransaction } from '@src/steam/steaminterfaces';
+import { ISteamOpenTransaction, ISteamTransaction, ISteamUserTicket, ISteamOrder } from '@src/steam/steaminterfaces';
 import { Request, Response } from 'express';
-
-import { chain } from 'lodash';
 
 // Improving type annotations for errors and response objects
 interface CustomError extends Error {
@@ -44,27 +42,27 @@ export default {
         throw new Error(data.response?.error?.errordesc ?? 'Steam API returned unknown error');
       }
 
-      res.status(200).json({ success });
+      res.status(200).json({ success, ...data.response.params });
     } catch (err) {
       validateError(res, err as CustomError);
     }
   },
 
   checkAppOwnership: async (req: Request, res: Response): Promise<void> => {
-    const { steamId, appId } = req.body;
+    const { steamId } = req.body;
 
-    if (!appId || !steamId) {
-      res.status(400).json({ error: 'Missing fields steamId or appId' });
+    if (!steamId) {
+      res.status(400).json({ error: 'Missing steamId field' });
       return;
     }
 
     try {
-      const data = await req.steam.steamCheckAppOwnership({ appId, steamId });
+      const data = await req.steam.steamCheckAppOwnership({ steamId });
 
       const success = data.appownership.result === 'OK' && data.appownership.ownsapp;
 
       if (!success) {
-        throw new Error('The specified steamId has not purchased the provided appId');
+        throw new Error('The specified steamId has not purchased the app');
       }
 
       res.status(200).json({ success });
@@ -74,33 +72,78 @@ export default {
   },
 
   initPurchase: async (req: Request, res: Response): Promise<void> => {
-    const { appId, category, itemDescription, itemId, orderId, steamId }: ISteamOpenTransaction =
+    const { language, currency, itemId, steamId }: ISteamOpenTransaction =
       req.body;
+    const { ticket }: ISteamUserTicket = req.body;
 
-    if (!appId || !category || !itemDescription || !itemId || !orderId || !steamId) {
+    if (!language || !currency || !itemId || !steamId) {
       res.status(400).json({ error: 'Missing fields' });
       return;
     }
 
-    const product = chain(constants.products)
-      .filter(p => p.id.toString() == itemId)
-      .first()
-      .value();
-
-    if (!product) {
+    const product = constants.products.find(p => p.id === itemId);
+    //Get corresponding product from constants
+    if (product === undefined) {
       res.status(400).json({ error: 'ItemId not found in the game database' });
       return;
     }
 
+    //Compute used currency, default to USD if not found
+    let usedCurrency = 'USD';
+    if (product.price_per_currency.has(currency)) {
+      usedCurrency = currency;
+    } else {
+      console.log(`Currency ${currency} not found for product ${itemId}, using default USD`);
+    }
+
+    // Get price for the product in the specified currency
+    const price = product.price_per_currency.get(usedCurrency);
+
+    //generates a twitter snowflake ID
+    function generate(): string {
+      const timestamp = Date.now();
+      const epoch = Date.UTC(2020, 0, 1).valueOf()
+      const shard_id = 420;
+
+      // tslint:disable:no-bitwise
+      let result = (BigInt(timestamp) - BigInt(epoch)) << BigInt(22);
+      result = result | (BigInt(shard_id % 1024) << BigInt(12));
+      result = result | BigInt(constants.sequence++ % 4096);
+      // tslint:enable:no-bitwise
+      return result.toString();
+    }
+
+    let orderId = generate();
+    console.log(`Generated Order ID: ${orderId}`);
+
     try {
+
+      const check_app_ownership = await req.steam.steamCheckAppOwnership({ steamId });
+
+      const app_ownership_success = check_app_ownership.appownership.result === 'OK' && check_app_ownership.appownership.ownsapp;
+
+      if (!app_ownership_success) {
+        throw new Error('The specified steamId has not purchased the provided appId');
+      }
+
+      const check_auth = await req.steam.steamAuthenticateUserTicket({ ticket });
+
+      const auth_success = check_auth.response?.params?.result === 'OK';
+
+      if (!auth_success) {
+        throw new Error('Invalid authentication ticket');
+      }
+
       const data = await req.steam.steamMicrotransactionInitWithOneItem({
-        appId,
-        category,
-        amount: product.price,
-        itemDescription,
+        amount: price,
+        description: product.description,
         itemId,
         orderId,
         steamId,
+        language,
+        currency: usedCurrency,
+        frequency: product.frequency,
+        period: product.period,
       });
 
       const success = data.response.result === 'OK' && data.response.params.transid;
@@ -116,15 +159,24 @@ export default {
   },
 
   checkPurchaseStatus: async (req: Request, res: Response): Promise<void> => {
-    const { appId, orderId, transId }: ISteamTransaction = req.body;
+    const { orderId, transId }: ISteamTransaction = req.body;
+    const { ticket }: ISteamUserTicket = req.body;
 
-    if (!appId || !orderId || !transId) {
+    if (!orderId || !transId) {
       res.status(400).json({ error: 'Missing fields' });
       return;
     }
 
     try {
-      const data = await req.steam.steamMicrotransactionCheckRequest({ appId, orderId, transId });
+      const check_auth = await req.steam.steamAuthenticateUserTicket({ ticket });
+
+      const auth_success = check_auth.response?.params?.result === 'OK';
+
+      if (!auth_success) {
+        throw new Error('Invalid authentication ticket');
+      }
+
+      const data = await req.steam.steamMicrotransactionCheckRequest({ orderId, transId });
 
       if (data.response?.result !== 'OK') {
         throw new Error(data.response?.error?.errordesc ?? 'Steam API returned unknown error');
@@ -137,15 +189,24 @@ export default {
   },
 
   finalizePurchase: async (req: Request, res: Response): Promise<void> => {
-    const { orderId, appId } = req.body;
+    const { orderId }: ISteamOrder = req.body;
+    const { ticket }: ISteamUserTicket = req.body;
 
-    if (!orderId || !appId) {
+    if (!orderId) {
       res.status(400).json({ error: 'Missing fields' });
       return;
     }
 
     try {
-      const data = await req.steam.steamMicrotransactionFinalizeTransaction(appId, orderId);
+      const check_auth = await req.steam.steamAuthenticateUserTicket({ ticket });
+
+      const auth_success = check_auth.response?.params?.result === 'OK';
+
+      if (!auth_success) {
+        throw new Error('Invalid authentication ticket');
+      }
+
+      const data = await req.steam.steamMicrotransactionFinalizeTransaction(orderId);
 
       res.status(200).json({
         success: data.response.result === 'OK',

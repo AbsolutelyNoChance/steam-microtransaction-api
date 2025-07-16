@@ -15,3 +15,6 @@ spec:
         - key: STEAM_ITEM_LOCALE
           value: 'en'
           type: SECRET
+        - key: STEAM_APP_ID
+          value: ''
+          type: SECRET

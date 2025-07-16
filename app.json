@@ -13,6 +13,10 @@
     "STEAM_ITEM_LOCALE": {
       "description": "Localization",
       "value": "en"
+    },
+    "STEAM_APP_ID": {
+      "description": "Steam App ID",
+      "value": ""
     }
   },
   "repository": "https://github.com/jasielmacedo/steam-microtransaction-api"

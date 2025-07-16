@@ -1,4 +1,19 @@
-import products from './products.json';
+import JSONProducts from './products.json';
+
+export interface SubscriptionProduct {
+  id: number;
+  description: string;
+  price_per_currency: Map<string, number>;
+  period: string;
+  frequency: string;
+}
+
+const products: SubscriptionProduct[] = (JSONProducts as any[]).map((product) => ({
+  ...product,
+  price_per_currency: new Map(
+    Object.entries(product.price_per_currency)
+  ),
+}));
 
 export default {
   /**
@@ -24,8 +39,15 @@ export default {
    */
   locale: process.env.STEAM_ITEM_LOCALE || 'en',
   /**
+   * The Steam App ID.
+   * This is used to identify the app in the Steam ecosystem.
+   */
+  steam_app_id: process.env.STEAM_APP_ID || '480',
+  /**
    * Set true if you want to enable sandbox mode
    * Please check https://partner.steamgames.com/doc/webapi/ISteamMicroTxnSandbox for more info
    */
   development: process.env.NODE_ENV == 'test' || process.env.NODE_ENV === 'development',
+
+  sequence: 100,
 };
