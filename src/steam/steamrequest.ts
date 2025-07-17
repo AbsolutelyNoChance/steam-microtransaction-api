@@ -1,5 +1,5 @@
 import constants from '@src/constants';
-import { subDays } from 'date-fns/subDays';
+import { subMinutes } from 'date-fns/subMinutes';
 import { format } from 'date-fns/format';
 
 import {
@@ -14,6 +14,9 @@ import {
   ISteamUserTicket,
   SteamOptions,
   ISteamAuthUserTicket,
+  ISteamMicroGetUserAgreementInfo,
+  ISteamMicroCancelAgreement,
+  ISteamAgreement,
 } from './steaminterfaces';
 
 import { HttpClient } from '@src/lib/httpclient';
@@ -92,10 +95,37 @@ export default class SteamRequest {
     };
     const now = new Date();
     //TODO change this to every minute
-    data.time = format(subDays(now, 5), "yyyy-MM-dd'T'HH:mm:ss'Z'");
+    data.time = format(subMinutes(now, 100), "yyyy-MM-dd'T'HH:mm:ss'Z'");
     console.log(data.time);
 
-    return await this._get<ISteamMicroGetReport>(this.interface, 'GetReport', 2, data);
+    return await this._get<ISteamMicroGetReport>(this.interface, 'GetReport', 5, data);
+  }
+
+  /**
+  * Get User Agreement Info
+  * @see https://partner.steamgames.com/doc/webapi/ISteamMicroTxn#GetUserAgreementInfo
+  */
+  async steamMicrotransactionGetUserAgreementInfo(steamId: string): Promise<ISteamMicroGetUserAgreementInfo> {
+    const data = {
+      key: this.options.webkey,
+      steamid: steamId,
+      appid: this.options.appId,
+    };
+    return await this._get<ISteamMicroGetUserAgreementInfo>(this.interface, 'GetUserAgreementInfo', 2, data);
+  }
+
+  /**
+  * Cancel Agreement
+  * @see https://partner.steamgames.com/doc/webapi/ISteamMicroTxn#CancelAgreement
+  */
+  async steamMicrotransactionCancelAgreement(info: ISteamAgreement): Promise<ISteamMicroCancelAgreement> {
+    const data = {
+      key: this.options.webkey,
+      steamid: info.steamId,
+      appid: this.options.appId,
+      agreementid: info.agreementId,
+    };
+    return await this._get<ISteamMicroCancelAgreement>(this.interface, 'CancelAgreement', 1, data);
   }
 
 

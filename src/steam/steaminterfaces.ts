@@ -18,6 +18,10 @@ export declare interface ISteamOrder {
   orderId: string;
 }
 
+export declare interface ISteamAgreement extends ISteamUserRequest {
+  agreementId: string;
+}
+
 export declare interface ISteamTransaction extends ISteamOrder {
   transId: string;
 }
@@ -82,6 +86,48 @@ export declare interface ISteamMicroGetReport {
     params: {
       count: number;
       orders: ISteamTxReport[];
+    };
+    error: {
+      errorcode: string;
+      errordesc: string;
+    };
+  };
+}
+
+export declare interface ISteamMicroCancelAgreement {
+  response: {
+    result: 'OK' | 'Failure';
+    params: {
+      agreementid: string;
+    };
+    error: {
+      errorcode: string;
+      errordesc: string;
+    };
+  };
+}
+
+export declare interface ISteamMicroGetUserAgreementInfo {
+  response: {
+    result: 'OK' | 'Failure';
+    params: {
+      agreements: {
+        agreementid: string;
+        itemid: string;
+        status: string;
+        period: string;
+        frequency: string;
+        startdate: string;
+        enddate: string;
+        recurringamt: string;
+        currency: string;
+        timecreated: string;
+        lastpayment: string;
+        lastamount: string;
+        nextpayment: string;
+        outstanding: string;
+        failedattempts: number;
+      }[];
     };
     error: {
       errorcode: string;
