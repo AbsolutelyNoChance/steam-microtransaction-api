@@ -100,30 +100,39 @@ export default class SteamRequest {
       subMinutes(now, Number(constants.report_update_frequency) + 5 / 60), //add 5 seconds to avoid issues with the update interval missing reports
       "yyyy-MM-dd'T'HH:mm:ss'Z'"
     );
-    data.time = format(subWeeks(now, 100), "yyyy-MM-dd'T'HH:mm:ss'Z'");
-    console.log(data.time);
+    //data.time = format(subWeeks(now, 100), "yyyy-MM-dd'T'HH:mm:ss'Z'");
+    //console.log(data.time);
 
     return await this._get<ISteamMicroGetReport>(this.interface, 'GetReport', 5, data);
   }
 
   /**
-  * Get User Agreement Info
-  * @see https://partner.steamgames.com/doc/webapi/ISteamMicroTxn#GetUserAgreementInfo
-  */
-  async steamMicrotransactionGetUserAgreementInfo(steamId: string): Promise<ISteamMicroGetUserAgreementInfo> {
+   * Get User Agreement Info
+   * @see https://partner.steamgames.com/doc/webapi/ISteamMicroTxn#GetUserAgreementInfo
+   */
+  async steamMicrotransactionGetUserAgreementInfo(
+    steamId: string
+  ): Promise<ISteamMicroGetUserAgreementInfo> {
     const data = {
       key: this.options.webkey,
       steamid: steamId,
       appid: this.options.appId,
     };
-    return await this._get<ISteamMicroGetUserAgreementInfo>(this.interface, 'GetUserAgreementInfo', 2, data);
+    return await this._get<ISteamMicroGetUserAgreementInfo>(
+      this.interface,
+      'GetUserAgreementInfo',
+      2,
+      data
+    );
   }
 
   /**
-  * Cancel Agreement
-  * @see https://partner.steamgames.com/doc/webapi/ISteamMicroTxn#CancelAgreement
-  */
-  async steamMicrotransactionCancelAgreement(info: ISteamAgreement): Promise<ISteamMicroCancelAgreement> {
+   * Cancel Agreement
+   * @see https://partner.steamgames.com/doc/webapi/ISteamMicroTxn#CancelAgreement
+   */
+  async steamMicrotransactionCancelAgreement(
+    info: ISteamAgreement
+  ): Promise<ISteamMicroCancelAgreement> {
     const data = {
       key: this.options.webkey,
       steamid: info.steamId,
@@ -132,7 +141,6 @@ export default class SteamRequest {
     };
     return await this._get<ISteamMicroCancelAgreement>(this.interface, 'CancelAgreement', 1, data);
   }
-
 
   /**
    * Initialize the microtransaction purchase.
@@ -195,9 +203,7 @@ export default class SteamRequest {
    * @param orderid
    * @see https://partner.steamgames.com/doc/webapi/ISteamMicroTxn#FinalizeTxn
    */
-  async steamMicrotransactionFinalizeTransaction(
-    orderid: string
-  ): Promise<ISteamMicroTx> {
+  async steamMicrotransactionFinalizeTransaction(orderid: string): Promise<ISteamMicroTx> {
     const formData = new URLSearchParams({
       key: this.options.webkey,
       orderid: orderid,

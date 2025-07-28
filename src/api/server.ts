@@ -100,7 +100,7 @@ export default (
     await new SteamRequest(httpclient)
       .steamMicrotransactionGetReport()
       .then(async report => {
-        console.log('Updating DB...');
+        //console.log('Updating DB...');
 
         for (const order of report.response.params.orders) {
           let nextPayment = order.nextpayment
@@ -167,13 +167,7 @@ export default (
               } as unknown as ISubscription //need this because of the enums, I don't wanna deal with that right now
             );
 
-          console.log('DB updated successfully');
         }
-
-        const test = await DBPool.getInstance()
-          .getPool()
-          .query<ITransaction[]>('SELECT * FROM TRANSACTION');
-        console.log(test);
       })
       .catch(err => {
         console.error('Error syncing subscription states:', err);
