@@ -9,7 +9,8 @@
       "CHF": 299
     },
     "period": "Month",
-    "frequency": "1"
+    "frequency": "1",
+    "type": "monthly"
   },
   {
     "id": 10365,
@@ -21,6 +22,7 @@
       "CHF": 2999
     },
     "period": "Month",
-    "frequency": "12"
+    "frequency": "12",
+    "type": "yearly"
   }
 ]

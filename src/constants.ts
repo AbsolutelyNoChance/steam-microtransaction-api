@@ -6,6 +6,7 @@ export interface SubscriptionProduct {
   price_per_currency: Map<string, number>;
   period: string;
   frequency: string;
+  type: 'yearly' | 'monthly';
 }
 
 const products: SubscriptionProduct[] = (JSONProducts as any[]).map((product) => ({

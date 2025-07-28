@@ -16,10 +16,11 @@ CREATE TABLE TRANSACTION (
 );
 
 CREATE TABLE SUBSCRIPTION (
-  steamId VARCHAR(20) NOT NULL,
-  agreementId VARCHAR(20) PRIMARY KEY,
+  orderid VARCHAR(20) NOT NULL,
+  steamid VARCHAR(20) NOT NULL,
+  agreementid VARCHAR(20) PRIMARY KEY,
   type ENUM('yearly', 'monthly') NOT NULL,
-  status ENUM('active', 'non_renewing', 'cancelled', 'failed') NOT NULL,
+  status ENUM('active', 'cancelled', 'failed') NOT NULL,
   startdate DATE NOT NULL,
   enddate DATE NOT NULL
 );

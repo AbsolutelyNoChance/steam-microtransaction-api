@@ -18,31 +18,12 @@ import xssClean from 'xss-clean';
 
 import mongoSanitize from 'express-mongo-sanitize';
 
-import mysql from 'mysql2/promise';
-
 import { format } from 'date-fns/format';
 
 import constants from '@src/constants';
-import { ITransaction } from '@src/mysql/mysqlinterface';
 import { parse } from 'date-fns/parse';
 
-console.log('Creating Pool for MySQL database...');
-console.log('Host:', constants.db_host);
-console.log('User:', constants.db_username);
-const pool = mysql.createPool({
-  host: constants.db_host,
-  user: constants.db_username,
-  password: constants.db_password,
-  database: 'steam_subscriptions',
-  waitForConnections: true,
-  connectionLimit: 10,
-  maxIdle: 10, // max idle connections, the default value is the same as `connectionLimit`
-  idleTimeout: 60000, // idle connections timeout, in milliseconds, the default value 60000
-  queueLimit: 0,
-  enableKeepAlive: true,
-  keepAliveInitialDelay: 0,
-  namedPlaceholders: true,
-});
+import DBPool, { ISubscription, ITransaction } from '@src/mysql/mysqlinterface';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -122,32 +103,76 @@ export default (
         console.log('Updating DB...');
 
         for (const order of report.response.params.orders) {
-          const [rows, fields] = await pool.execute(
-            'REPLACE INTO `TRANSACTION`(`orderid`, `transid`, `steamid`, `status`, `currency`, `country`, `timecreated`, `timeupdated`, `agreementid`, `agreementstatus`, `nextpayment`, `itemid`, `amount`, `vat`) VALUES(:orderid, :transid, :steamid, :status, :currency, :country, :timecreated, :timeupdated, :agreementid, :agreementstatus, :nextpayment, :itemid, :amount, :vat)',
-            {
-              orderid: order.orderid,
-              transid: order.transid,
-              steamid: order.steamid,
-              status: order.status,
-              currency: order.currency,
-              country: order.country,
-              timecreated: format(order.timecreated, 'yyyy-MM-dd HH:mm:ss'),
-              timeupdated: format(order.time, 'yyyy-MM-dd HH:mm:ss'),
-              agreementid: order.agreementid,
-              agreementstatus: order.agreementstatus,
-              nextpayment: order.nextpayment
-                ? format(parse(order.nextpayment, 'yyyyMMdd', new Date()), 'yyyy-MM-dd')
-                : null,
-              itemid: order.items.map(item => item.itemid).join(','),
-              amount: order.items.map(item => item.amount).join(','),
-              vat: order.items.map(item => item.vat).join(','),
-            } as unknown as ITransaction //need this because of the enums, I don't wanna deal with that right now
-          );
+          let nextPayment = order.nextpayment
+            ? format(parse(order.nextpayment, 'yyyyMMdd', new Date()), 'yyyy-MM-dd')
+            : null;
 
-          console.log('DB updated successfully', rows, fields);
+          let subscriptionStatus = 'failed';
+
+          if (order.agreementstatus === 'Canceled' || order.agreementstatus === 'Inactive') {
+            subscriptionStatus = 'cancelled';
+          } else if (order.agreementstatus === 'Active' || order.agreementstatus === 'Processing') {
+            subscriptionStatus = 'active';
+          } else if (order.agreementstatus === 'Failed') {
+            subscriptionStatus = 'failed';
+          }
+
+          if (order.status === 'Failed') {
+            nextPayment = null;
+          } else if (
+            order.status === 'Refunded' ||
+            order.status === 'PartialRefund' ||
+            order.status === 'RefundedSuspectedFraud' ||
+            order.status === 'RefundedFriendlyFraud' ||
+            order.status === 'Chargedback'
+          ) {
+            nextPayment = null;
+            subscriptionStatus = 'cancelled';
+          } else if (order.status === 'Succeeded' || order.status === 'Approved') {
+            // If the order is succeeded or approved, everything is fine
+          }
+
+          await DBPool.getInstance()
+            .getPool()
+            .execute(
+              'REPLACE INTO `TRANSACTION`(`orderid`, `transid`, `steamid`, `status`, `currency`, `country`, `timecreated`, `timeupdated`, `agreementid`, `agreementstatus`, `nextpayment`, `itemid`, `amount`, `vat`) VALUES(:orderid, :transid, :steamid, :status, :currency, :country, :timecreated, :timeupdated, :agreementid, :agreementstatus, :nextpayment, :itemid, :amount, :vat)',
+              {
+                orderid: order.orderid,
+                transid: order.transid,
+                steamid: order.steamid,
+                status: order.status,
+                currency: order.currency,
+                country: order.country,
+                timecreated: format(order.timecreated, 'yyyy-MM-dd HH:mm:ss'),
+                timeupdated: format(order.time, 'yyyy-MM-dd HH:mm:ss'),
+                agreementid: order.agreementid,
+                agreementstatus: order.agreementstatus,
+                nextpayment: nextPayment,
+                itemid: order.items.map(item => item.itemid).join(','),
+                amount: order.items.map(item => item.amount).join(','),
+                vat: order.items.map(item => item.vat).join(','),
+              } as unknown as ITransaction //need this because of the enums, I don't wanna deal with that right now
+            );
+
+          await DBPool.getInstance()
+            .getPool()
+            .execute(
+              'UPDATE `SUBSCRIPTION` SET `status` = :status, `enddate` = COALESCE(:enddate, enddate) WHERE `steamid` = :steamid AND `agreementid` = :agreementid',
+              {
+                orderid: order.orderid,
+                steamid: order.steamid,
+                status: subscriptionStatus,
+                agreementid: order.agreementid,
+                enddate: nextPayment,
+              } as unknown as ISubscription //need this because of the enums, I don't wanna deal with that right now
+            );
+
+          console.log('DB updated successfully');
         }
 
-        const test = await pool.query<ITransaction[]>('SELECT * FROM transactions');
+        const test = await DBPool.getInstance()
+          .getPool()
+          .query<ITransaction[]>('SELECT * FROM TRANSACTION');
         console.log(test);
       })
       .catch(err => {

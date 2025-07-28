@@ -164,6 +164,9 @@ export declare interface ISteamMicroTx {
     params: {
       orderid: string;
       transid: string;
+      agreements?: {
+        agreementid: string;
+      }[];
     };
     error: {
       errorcode: string;

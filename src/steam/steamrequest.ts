@@ -95,8 +95,11 @@ export default class SteamRequest {
       maxresults: '10000',
     };
     const now = new Date();
-    //TODO change this to every minute
-    data.time = format(subMinutes(now, 100), "yyyy-MM-dd'T'HH:mm:ss'Z'");
+    //TODO change this so we avoid so many overlapping updates
+    data.time = format(
+      subMinutes(now, Number(constants.report_update_frequency) + 5 / 60), //add 5 seconds to avoid issues with the update interval missing reports
+      "yyyy-MM-dd'T'HH:mm:ss'Z'"
+    );
     data.time = format(subWeeks(now, 100), "yyyy-MM-dd'T'HH:mm:ss'Z'");
     console.log(data.time);
 

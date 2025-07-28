@@ -1,6 +1,15 @@
 import constants from '@src/constants';
-import { ISteamOpenTransaction, ISteamTransaction, ISteamUserTicket, ISteamOrder, ISteamAgreement, ISteamUserRequest } from '@src/steam/steaminterfaces';
-import { Request, Response, NextFunction } from 'express';
+import DBPool, { ISubscription } from '@src/mysql/mysqlinterface';
+import {
+  ISteamAgreement,
+  ISteamOpenTransaction,
+  ISteamOrder,
+  ISteamTransaction,
+  ISteamUserRequest,
+  ISteamUserTicket,
+} from '@src/steam/steaminterfaces';
+import { format } from 'date-fns/format';
+import { NextFunction, Request, Response } from 'express';
 
 // Improving type annotations for errors and response objects
 interface CustomError extends Error {
@@ -24,7 +33,6 @@ const validateError = (res: Response, err: CustomError): void => {
 };
 
 export default {
-
   authenticateUser: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { ticket }: ISteamUserTicket = req.body;
     const { steamId }: ISteamUserRequest = req.body;
@@ -36,7 +44,9 @@ export default {
     try {
       const check_auth = await req.steam.steamAuthenticateUserTicket({ ticket });
 
-      const auth_success = check_auth.response?.params?.result === 'OK' && check_auth.response?.params?.steamid === steamId;
+      const auth_success =
+        check_auth.response?.params?.result === 'OK' &&
+        check_auth.response?.params?.steamid === steamId;
 
       if (!auth_success) {
         throw new Error('Invalid authentication ticket');
@@ -135,14 +145,15 @@ export default {
       return result.toString();
     }
 
-    let orderId = generate();
+    const orderId = generate();
     console.log(`Generated Order ID: ${orderId}`);
 
     try {
-
       const check_app_ownership = await req.steam.steamCheckAppOwnership({ steamId });
 
-      const app_ownership_success = check_app_ownership.appownership.result === 'OK' && check_app_ownership.appownership.ownsapp;
+      const app_ownership_success =
+        check_app_ownership.appownership.result === 'OK' &&
+        check_app_ownership.appownership.ownsapp;
 
       if (!app_ownership_success) {
         throw new Error('The specified steamId has not purchased the provided appId');
@@ -161,6 +172,22 @@ export default {
       });
 
       const success = data.response.result === 'OK' && data.response.params.transid;
+
+      DBPool.getInstance()
+        .getPool()
+        .execute(
+          'INSERT INTO `SUBSCRIPTION`(`orderid`, `steamid`, `status`, `agreementid`, `type`, `startdate`, `enddate`) VALUES(:orderid, :steamid, :status, :agreementid, :type, :startdate, :enddate)',
+          {
+            orderid: orderId,
+            steamid: steamId,
+            status: 'active',
+            agreementid:
+              data.response.params.agreements && data.response.params.agreements[0]?.agreementid,
+            type: product.type,
+            startdate: format(new Date(), 'yyyy-MM-dd'),
+            enddate: format(new Date(), 'yyyy-MM-dd'),
+          } as unknown as ISubscription
+        );
 
       if (!success) {
         throw new Error(data.response?.error?.errordesc ?? 'Steam API returned unknown error');
