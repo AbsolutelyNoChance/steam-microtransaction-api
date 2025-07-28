@@ -20,8 +20,11 @@ import mongoSanitize from 'express-mongo-sanitize';
 
 import mysql from 'mysql2/promise';
 
+import { format } from 'date-fns/format';
+
 import constants from '@src/constants';
 import { ITransaction } from '@src/mysql/mysqlinterface';
+import { parse } from 'date-fns/parse';
 
 console.log('Creating Pool for MySQL database...');
 console.log('Host:', constants.db_host);
@@ -128,11 +131,11 @@ export default (
               status: order.status,
               currency: order.currency,
               country: order.country,
-              timecreated: order.timecreated,
-              timeupdated: order.time,
+              timecreated: format(order.timecreated, 'yyyy-MM-dd HH:mm:ss'),
+              timeupdated: format(order.time, 'yyyy-MM-dd HH:mm:ss'),
               agreementid: order.agreementid,
               agreementstatus: order.agreementstatus,
-              nextpayment: order.nextpayment,
+              nextpayment: format(parse(order.nextpayment, 'yyyyMMdd', new Date()), 'yyyy-MM-dd'),
               itemid: order.items.map(item => item.itemid).join(','),
               amount: order.items.map(item => item.amount).join(','),
               vat: order.items.map(item => item.vat).join(','),
