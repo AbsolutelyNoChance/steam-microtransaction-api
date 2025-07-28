@@ -18,3 +18,9 @@ spec:
         - key: STEAM_APP_ID
           value: ''
           type: SECRET
+        - key: MYSQL_USER
+          value: ''
+          type: SECRET
+        - key: MYSQL_PASSWORD
+          value: ''
+          type: SECRET

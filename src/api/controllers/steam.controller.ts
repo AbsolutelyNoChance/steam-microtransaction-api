@@ -124,7 +124,7 @@ export default {
     //generates a twitter snowflake ID
     function generate(): string {
       const timestamp = Date.now();
-      const epoch = Date.UTC(2020, 0, 1).valueOf()
+      const epoch = Date.UTC(2020, 0, 1).valueOf();
       const shard_id = 420;
 
       // tslint:disable:no-bitwise

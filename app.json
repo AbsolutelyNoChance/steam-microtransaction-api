@@ -17,6 +17,18 @@
     "STEAM_APP_ID": {
       "description": "Steam App ID",
       "value": ""
+    },
+    "MYSQL_USER": {
+      "description": "DB User",
+      "value": ""
+    },
+    "MYSQL_PASSWORD": {
+      "description": "DB User Password",
+      "value": ""
+    },
+    "MYSQL_HOST": {
+      "description": "DB Host",
+      "value": ""
     }
   },
   "repository": "https://github.com/jasielmacedo/steam-microtransaction-api"

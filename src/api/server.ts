@@ -18,6 +18,13 @@ import xssClean from 'xss-clean';
 
 import mongoSanitize from 'express-mongo-sanitize';
 
+import mysql, {
+  ConnectionOptions,
+} from 'mysql2/promise';
+
+import constants from '@src/constants';
+import { ISubscription } from '@src/mysql/mysqlinterface';
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
@@ -89,24 +96,60 @@ export default (
     console.log(`Server ${host} started at port:${port}`);
   });
 
+  (async () => {
+    console.log('Connecting to MySQL database...');
+    console.log('Using credentials:');
+    console.log('Host:', constants.db_host);
+    console.log('User:', constants.db_username);
+    console.log('Password:', constants.db_password);
+    const access: ConnectionOptions = {
+      host: constants.db_host,
+      user: constants.db_username,
+      password: constants.db_password,
+      database: 'steam_subscriptions',
+      //port: 3306,
+    };
+
+    const conn = await mysql.createConnection(access);
+
+    /** Inserting some transactions */
+    //const [inserted] = await conn.execute<ResultSetHeader>(
+    //  'INSERT INTO `SUBSCRIPTION`(`name`) VALUES(?), (?), (?), (?);',
+    //  ['Josh', 'John', 'Marie', 'Gween']
+    //);
+
+    //console.log('Inserted:', inserted.affectedRows);
+
+    /** Getting users */
+    const [users] = await conn.query<ISubscription[]>(
+      'SELECT * FROM `SUBSCRIPTION` ORDER BY `steamid` ASC;'
+    );
+
+    users.forEach((user) => {
+      console.log('-----------');
+      console.log('id:  ', user.id);
+      console.log('name:', user.name);
+    });
+
+    await conn.end();
+  })();
+
   async function syncSubscriptionStates() {
-    await new SteamRequest(httpclient).steamMicrotransactionGetReport()
-      .then((report) => {
+    await new SteamRequest(httpclient)
+      .steamMicrotransactionGetReport()
+      .then(report => {
         //TODO implement this
         console.log(report);
       })
-      .catch((err) => {
+      .catch(err => {
         console.error('Error syncing subscription states:', err);
       });
   }
 
-  setInterval(
-    function sync() {
-      console.log('Syncing subscription states...');
-      syncSubscriptionStates()
-        .then()
-        .catch(console.error)
-    }, 1000 * 60 * 1) // Gather data every minute
+  setInterval(function sync() {
+    console.log('Syncing subscription states...');
+    syncSubscriptionStates().then().catch(console.error);
+  }, 1000 * 60 * 1); // Gather data every minute
 
   return [app, serverListener];
 };

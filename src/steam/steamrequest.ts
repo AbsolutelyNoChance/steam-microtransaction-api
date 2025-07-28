@@ -20,6 +20,7 @@ import {
 } from './steaminterfaces';
 
 import { HttpClient } from '@src/lib/httpclient';
+import { subWeeks } from 'date-fns';
 
 export default class SteamRequest {
   private options: SteamOptions;
@@ -96,6 +97,7 @@ export default class SteamRequest {
     const now = new Date();
     //TODO change this to every minute
     data.time = format(subMinutes(now, 100), "yyyy-MM-dd'T'HH:mm:ss'Z'");
+    data.time = format(subWeeks(now, 100), "yyyy-MM-dd'T'HH:mm:ss'Z'");
     console.log(data.time);
 
     return await this._get<ISteamMicroGetReport>(this.interface, 'GetReport', 5, data);

@@ -8,9 +8,10 @@ module.exports = {
   },
   root: true,
   rules: {
+    "indent": "off",
     "no-unused-vars": "off",
     '@typescript-eslint/no-unused-vars': [1, { 'varsIgnorePattern': '^_' }],
-    "no-console": ["error"],
+    //"no-console": ["error"],
     "sort-imports": ["error", { "memberSyntaxSortOrder": ['all', 'single', 'multiple', 'none'], "allowSeparatedGroups": true }],
     "@typescript-eslint/no-explicit-any": 'off',
     '@typescript-eslint/no-use-before-define': [

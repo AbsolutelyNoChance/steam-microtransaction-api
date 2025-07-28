@@ -43,6 +43,13 @@ export default {
    * This is used to identify the app in the Steam ecosystem.
    */
   steam_app_id: process.env.STEAM_APP_ID || '480',
+
+  db_username: process.env.MYSQL_USER,
+
+  db_password: process.env.MYSQL_PASSWORD,
+
+  db_host: process.env.MYSQL_HOST,
+
   /**
    * Set true if you want to enable sandbox mode
    * Please check https://partner.steamgames.com/doc/webapi/ISteamMicroTxnSandbox for more info
