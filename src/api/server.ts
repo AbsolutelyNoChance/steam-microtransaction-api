@@ -135,7 +135,9 @@ export default (
               timeupdated: format(order.time, 'yyyy-MM-dd HH:mm:ss'),
               agreementid: order.agreementid,
               agreementstatus: order.agreementstatus,
-              nextpayment: format(parse(order.nextpayment, 'yyyyMMdd', new Date()), 'yyyy-MM-dd'),
+              nextpayment: order.nextpayment
+                ? format(parse(order.nextpayment, 'yyyyMMdd', new Date()), 'yyyy-MM-dd')
+                : null,
               itemid: order.items.map(item => item.itemid).join(','),
               amount: order.items.map(item => item.amount).join(','),
               vat: order.items.map(item => item.vat).join(','),
