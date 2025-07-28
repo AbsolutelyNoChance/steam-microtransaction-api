@@ -18,12 +18,27 @@ import xssClean from 'xss-clean';
 
 import mongoSanitize from 'express-mongo-sanitize';
 
-import mysql, {
-  ConnectionOptions,
-} from 'mysql2/promise';
+import mysql from 'mysql2/promise';
 
 import constants from '@src/constants';
-import { ISubscription } from '@src/mysql/mysqlinterface';
+import { ITransaction } from '@src/mysql/mysqlinterface';
+
+console.log('Creating Pool for MySQL database...');
+console.log('Host:', constants.db_host);
+console.log('User:', constants.db_username);
+const pool = mysql.createPool({
+  host: constants.db_host,
+  user: constants.db_username,
+  password: constants.db_password,
+  database: 'steam_subscriptions',
+  waitForConnections: true,
+  connectionLimit: 10,
+  maxIdle: 10, // max idle connections, the default value is the same as `connectionLimit`
+  idleTimeout: 60000, // idle connections timeout, in milliseconds, the default value 60000
+  queueLimit: 0,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0,
+});
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -96,60 +111,53 @@ export default (
     console.log(`Server ${host} started at port:${port}`);
   });
 
-  (async () => {
-    console.log('Connecting to MySQL database...');
-    console.log('Using credentials:');
-    console.log('Host:', constants.db_host);
-    console.log('User:', constants.db_username);
-    console.log('Password:', constants.db_password);
-    const access: ConnectionOptions = {
-      host: constants.db_host,
-      user: constants.db_username,
-      password: constants.db_password,
-      database: 'steam_subscriptions',
-      //port: 3306,
-    };
-
-    const conn = await mysql.createConnection(access);
-
-    /** Inserting some transactions */
-    //const [inserted] = await conn.execute<ResultSetHeader>(
-    //  'INSERT INTO `SUBSCRIPTION`(`name`) VALUES(?), (?), (?), (?);',
-    //  ['Josh', 'John', 'Marie', 'Gween']
-    //);
-
-    //console.log('Inserted:', inserted.affectedRows);
-
-    /** Getting users */
-    const [users] = await conn.query<ISubscription[]>(
-      'SELECT * FROM `SUBSCRIPTION` ORDER BY `steamid` ASC;'
-    );
-
-    users.forEach((user) => {
-      console.log('-----------');
-      console.log('id:  ', user.id);
-      console.log('name:', user.name);
-    });
-
-    await conn.end();
-  })();
-
   async function syncSubscriptionStates() {
     await new SteamRequest(httpclient)
       .steamMicrotransactionGetReport()
-      .then(report => {
-        //TODO implement this
-        console.log(report);
+      .then(async report => {
+        console.log('Updating DB...');
+
+        for (const order of report.response.params.orders) {
+          const [rows, fields] = await pool.execute(
+            'REPLACE INTO `TRANSACTION`(`orderid`, `transid`, `steamid`, `status`, `currency`, `country`, `timecreated`, `timeupdated`, `agreementid`, `agreementstatus`, `nextpayment`, `itemid`, `amount`, `vat`) VALUES(:orderid, :transid, :steamid, :status, :currency, :country, :timecreated, :timeupdated, :agreementid, :agreementstatus, :nextpayment, :itemid, :amount, :vat)',
+            {
+              orderid: order.orderid,
+              transid: order.transid,
+              steamid: order.steamid,
+              status: order.status,
+              currency: order.currency,
+              country: order.country,
+              timecreated: order.timecreated,
+              timeupdated: order.time,
+              agreementid: order.agreementid,
+              agreementstatus: order.agreementstatus,
+              nextpayment: order.nextpayment,
+              itemid: order.items.map(item => item.itemid).join(','),
+              amount: order.items.map(item => item.amount).join(','),
+              vat: order.items.map(item => item.vat).join(','),
+            } as unknown as ITransaction //need this because of the enums, I don't wanna deal with that right now
+          );
+
+          console.log('DB updated successfully', rows, fields);
+        }
+
+        const test = await pool.query<ITransaction[]>('SELECT * FROM transactions');
+        console.log(test);
       })
       .catch(err => {
         console.error('Error syncing subscription states:', err);
       });
   }
 
+  console.log(
+    'Starting subscription state sync with interval of',
+    constants.report_update_frequency,
+    'minutes'
+  );
   setInterval(function sync() {
     console.log('Syncing subscription states...');
     syncSubscriptionStates().then().catch(console.error);
-  }, 1000 * 60 * 1); // Gather data every minute
+  }, 1000 * 60 * Number(constants.report_update_frequency)); // Gather data every X minutes
 
   return [app, serverListener];
 };

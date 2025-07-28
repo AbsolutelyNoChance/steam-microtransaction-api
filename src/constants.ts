@@ -50,6 +50,8 @@ export default {
 
   db_host: process.env.MYSQL_HOST,
 
+  report_update_frequency: process.env.REPORT_UPDATE_FREQUENCY_MINUTES || 5,
+
   /**
    * Set true if you want to enable sandbox mode
    * Please check https://partner.steamgames.com/doc/webapi/ISteamMicroTxnSandbox for more info

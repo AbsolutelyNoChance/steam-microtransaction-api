@@ -146,6 +146,9 @@ export declare interface ISteamTxReport {
   country: string;
   usstate: string;
   timecreated: string;
+  agreementid: string;
+  agreementstatus: string;
+  nextpayment?: string;
   items: {
     itemid: string;
     qty: number;
