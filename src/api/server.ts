@@ -157,11 +157,11 @@ export default (
           await DBPool.getInstance()
             .getPool()
             .execute(
-              'UPDATE `SUBSCRIPTION` SET `status` = ":status", `enddate` = COALESCE(:enddate, enddate) WHERE `steamid` = ":steamid" AND `agreementid` = ":agreementid"',
+              'UPDATE `SUBSCRIPTION` SET `status` = :status, `enddate` = COALESCE(:enddate, enddate) WHERE `steamid` = ":steamid" AND `agreementid` = ":agreementid"',
               {
                 orderid: order.orderid,
                 steamid: order.steamid,
-                status: subscriptionStatus,
+                status: `"${subscriptionStatus}"`,
                 agreementid: order.agreementid,
                 enddate: nextPayment ? `"${nextPayment}"` : null, //formatting issues, need to quote strings for index to work properly
               } as unknown as ISubscription //need this because of the enums, I don't wanna deal with that right now
