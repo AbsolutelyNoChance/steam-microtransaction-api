@@ -176,7 +176,7 @@ export default {
       DBPool.getInstance()
         .getPool()
         .execute(
-          'INSERT INTO `SUBSCRIPTION`(`orderid`, `steamid`, `status`, `agreementid`, `type`, `startdate`, `enddate`) VALUES(":orderid", ":steamid", :status, ":agreementid", :type, ":startdate", ":enddate")',
+          'INSERT INTO `SUBSCRIPTION`(`orderid`, `steamid`, `status`, `agreementid`, `type`, `startdate`, `enddate`) VALUES(":orderid", ":steamid", :status, ":agreementid", :type, :startdate, :enddate)',
           {
             orderid: orderId,
             steamid: steamId,
