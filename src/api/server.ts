@@ -135,7 +135,7 @@ export default (
           await DBPool.getInstance()
             .getPool()
             .execute(
-              'REPLACE INTO `TRANSACTION`(`orderid`, `transid`, `steamid`, `status`, `currency`, `country`, `timecreated`, `timeupdated`, `agreementid`, `agreementstatus`, `nextpayment`, `itemid`, `amount`, `vat`) VALUES(:orderid, :transid, :steamid, :status, :currency, :country, :timecreated, :timeupdated, :agreementid, :agreementstatus, :nextpayment, :itemid, :amount, :vat)',
+              'REPLACE INTO `TRANSACTION`(`orderid`, `transid`, `steamid`, `status`, `currency`, `country`, `timecreated`, `timeupdated`, `agreementid`, `agreementstatus`, `nextpayment`, `itemid`, `amount`, `vat`) VALUES(":orderid", ":transid", ":steamid", ":status", ":currency", ":country", ":timecreated", ":timeupdated", ":agreementid", ":agreementstatus", :nextpayment, :itemid, :amount, :vat)',
               {
                 orderid: order.orderid,
                 transid: order.transid,
@@ -147,7 +147,7 @@ export default (
                 timeupdated: format(order.time, 'yyyy-MM-dd HH:mm:ss'),
                 agreementid: order.agreementid,
                 agreementstatus: order.agreementstatus,
-                nextpayment: nextPayment,
+                nextpayment: nextPayment ? `"${nextPayment}"` : null, //formatting issues, need to quote strings for index to work properly
                 itemid: order.items.map(item => item.itemid).join(','),
                 amount: order.items.map(item => item.amount).join(','),
                 vat: order.items.map(item => item.vat).join(','),
@@ -157,13 +157,13 @@ export default (
           await DBPool.getInstance()
             .getPool()
             .execute(
-              'UPDATE `SUBSCRIPTION` SET `status` = :status, `enddate` = COALESCE(:enddate, enddate) WHERE `steamid` = :steamid AND `agreementid` = :agreementid',
+              'UPDATE `SUBSCRIPTION` SET `status` = ":status", `enddate` = COALESCE(:enddate, enddate) WHERE `steamid` = ":steamid" AND `agreementid` = ":agreementid"',
               {
                 orderid: order.orderid,
                 steamid: order.steamid,
                 status: subscriptionStatus,
                 agreementid: order.agreementid,
-                enddate: nextPayment,
+                enddate: nextPayment ? `"${nextPayment}"` : null, //formatting issues, need to quote strings for index to work properly
               } as unknown as ISubscription //need this because of the enums, I don't wanna deal with that right now
             );
 

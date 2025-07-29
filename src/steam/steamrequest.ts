@@ -20,7 +20,6 @@ import {
 } from './steaminterfaces';
 
 import { HttpClient } from '@src/lib/httpclient';
-import { subWeeks } from 'date-fns';
 
 export default class SteamRequest {
   private options: SteamOptions;

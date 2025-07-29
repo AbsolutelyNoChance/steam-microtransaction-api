@@ -28,3 +28,6 @@ CREATE TABLE SUBSCRIPTION (
 # Privileges for `api`@`%`
 GRANT SELECT, INSERT, UPDATE ON *.* TO `api`@`%`;
 GRANT SELECT, INSERT, UPDATE, REFERENCES, LOCK TABLES ON `steam\_subscriptions`.* TO `api`@`%`;
+
+# Add index to steamid
+ALTER TABLE `TRANSACTION` ADD INDEX `steamid_index` (`steamid`);

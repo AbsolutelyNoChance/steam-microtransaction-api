@@ -14,18 +14,15 @@ const handleMissingFields = (fields: string[]) => (req, res, next) => {
 const validateGetReliableUserInfo: RequestHandler = handleMissingFields(['steamId']);
 const validateCheckAppOwnership: RequestHandler = handleMissingFields(['steamId']);
 const validateFinalizePurchase: RequestHandler = handleMissingFields(['orderId']);
-const validateCheckPurchaseStatus: RequestHandler = handleMissingFields([
-  'orderId',
-  'transId',
-]);
+const validateCheckPurchaseStatus: RequestHandler = handleMissingFields(['orderId', 'transId']);
 const validateInitPurchase: RequestHandler = handleMissingFields([
   'language',
   'currency',
   'itemId',
 ]);
 const validateCancelAgreement: RequestHandler = handleMissingFields(['steamId', 'agreementId']);
-const validateGetUserAgreementInfo: RequestHandler = handleMissingFields(['steamId',]);
-const validateAuthentication: RequestHandler = handleMissingFields(['steamId', 'ticket',]);
+const validateGetUserAgreementInfo: RequestHandler = handleMissingFields(['steamId']);
+const validateAuthentication: RequestHandler = handleMissingFields(['steamId', 'ticket']);
 
 export default (app: Express): void => {
   const router = Router();
@@ -46,7 +43,11 @@ export default (app: Express): void => {
    * }
    */
   router.get('/', (_req, res) => {
-    res.status(200).json({ status: true, message: `API is running ${process.env.NODE_ENV === 'development' ? 'in development mode' : 'in production mode'} ${new Date().toLocaleString()}` });
+    res.status(200).json({
+      status: true,
+      message: `API is running ${process.env.NODE_ENV === 'development' ? 'in development mode' : 'in production mode'
+        } ${new Date().toLocaleString()}`,
+    });
   });
 
   /**
@@ -136,7 +137,13 @@ export default (app: Express): void => {
    * }
    *
    */
-  router.post('/InitPurchase', validateInitPurchase, validateAuthentication, steamController.authenticateUser, steamController.initPurchase);
+  router.post(
+    '/InitPurchase',
+    validateInitPurchase,
+    validateAuthentication,
+    steamController.authenticateUser,
+    steamController.initPurchase
+  );
 
   /**
    *
@@ -160,11 +167,29 @@ export default (app: Express): void => {
    * }
    *
    */
-  router.post('/FinalizePurchase', validateFinalizePurchase, validateAuthentication, steamController.authenticateUser, steamController.finalizePurchase);
+  router.post(
+    '/FinalizePurchase',
+    validateFinalizePurchase,
+    validateAuthentication,
+    steamController.authenticateUser,
+    steamController.finalizePurchase
+  );
 
-  router.post('/CancelAgreement', validateCancelAgreement, validateAuthentication, steamController.authenticateUser, steamController.cancelAgreement);
+  router.post(
+    '/CancelAgreement',
+    validateCancelAgreement,
+    validateAuthentication,
+    steamController.authenticateUser,
+    steamController.cancelAgreement
+  );
 
-  router.post('/getUserAgreementInfo', validateGetUserAgreementInfo, validateAuthentication, steamController.authenticateUser, steamController.getUserAgreementInfo);
+  router.post(
+    '/getUserAgreementInfo',
+    validateGetUserAgreementInfo,
+    validateAuthentication,
+    steamController.authenticateUser,
+    steamController.getUserAgreementInfo
+  );
 
   /**
    *

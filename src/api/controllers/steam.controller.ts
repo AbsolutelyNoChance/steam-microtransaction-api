@@ -1,5 +1,5 @@
 import constants from '@src/constants';
-import DBPool, { ISubscription } from '@src/mysql/mysqlinterface';
+import DBPool, { ISubscription, ITransaction } from '@src/mysql/mysqlinterface';
 import {
   ISteamAgreement,
   ISteamOpenTransaction,
@@ -176,7 +176,7 @@ export default {
       DBPool.getInstance()
         .getPool()
         .execute(
-          'INSERT INTO `SUBSCRIPTION`(`orderid`, `steamid`, `status`, `agreementid`, `type`, `startdate`, `enddate`) VALUES(:orderid, :steamid, :status, :agreementid, :type, :startdate, :enddate)',
+          'INSERT INTO `SUBSCRIPTION`(`orderid`, `steamid`, `status`, `agreementid`, `type`, `startdate`, `enddate`) VALUES(":orderid", ":steamid", ":status", ":agreementid", ":type", ":startdate", ":enddate")',
           {
             orderid: orderId,
             steamid: steamId,
@@ -270,13 +270,54 @@ export default {
     }
 
     try {
+      //Steamworks documentation tells us to use GetReport for tracking of recurring billing but it just doesn't give enough info.
+      //Scenario: A user cancels his subscription in the Steam UI
+      //Consequence: We get zero information through the GetReport API about this cancellation.
+      //Solution: Use GetUserAgreementInfo to get the current status of the subscription and then read our saved GetReport transactions to get the history of the subscription.
       const data = await req.steam.steamMicrotransactionGetUserAgreementInfo(steamId);
 
       if (data.response?.result !== 'OK') {
         throw new Error(data.response?.error?.errordesc ?? 'Steam API returned unknown error');
       }
 
-      res.status(200).json({ success: true, ...data.response.params });
+      //There's only one agreement active at the same time (Steam guarantee)
+      const agreement = data.response.params.agreements['agreement[0]'];
+
+      DBPool.getInstance()
+        .getPool()
+        .execute(
+          'SELECT * FROM `TRANSACTION` WHERE `steamid` = ":steamid" AND `agreementid` = ":agreementid" ORDER BY `TRANSACTION`.`timeupdated` DESC LIMIT 1',
+          {
+            steamid: steamId,
+            agreementid: agreement.agreementid,
+          }
+        )
+        .then(([rows]) => {
+          const transaction = rows as ITransaction[];
+
+          if (transaction.length === 0) {
+            res.status(200).json({ success: false, message: 'No transactions found' });
+            return;
+          }
+
+          const validTransaction = transaction.filter(
+            sub => sub.status === 'Approved' || sub.status === 'Succeeded'
+          );
+
+          if (validTransaction.length === 0) {
+            res.status(200).json({ success: false, message: 'No valid transactions found' });
+            return;
+          }
+          res.status(200).json({
+            success: true,
+            transaction: validTransaction,
+            agreement: agreement,
+          });
+        })
+        .catch(err => {
+          console.error('Error fetching subscriptions:', err);
+          res.status(500).json({ error: 'Internal server error' });
+        });
     } catch (err) {
       validateError(res, err as CustomError);
     }

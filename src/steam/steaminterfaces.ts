@@ -112,22 +112,25 @@ export declare interface ISteamMicroGetUserAgreementInfo {
     result: 'OK' | 'Failure';
     params: {
       agreements: {
-        agreementid: string;
-        itemid: string;
-        status: string;
-        period: string;
-        frequency: string;
-        startdate: string;
-        enddate: string;
-        recurringamt: string;
-        currency: string;
-        timecreated: string;
-        lastpayment: string;
-        lastamount: string;
-        nextpayment: string;
-        outstanding: string;
-        failedattempts: number;
-      }[];
+        'agreement[0]': {
+          agreementid: string;
+          itemid: number;
+          status: string;
+          period: string;
+          frequency: number;
+          startdate: string;
+          enddate: string;
+          recurringamt: number;
+          currency: string;
+          timecreated: string;
+          lastpayment: string;
+          lastamount: number;
+          lastamountvat: number;
+          nextpayment: string;
+          outstanding: number;
+          failedattempts: number;
+        };
+      };
     };
     error: {
       errorcode: string;
