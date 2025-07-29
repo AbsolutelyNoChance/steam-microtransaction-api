@@ -99,6 +99,8 @@ export default class SteamRequest {
       subMinutes(now, Number(constants.report_update_frequency) + 5 / 60), //add 5 seconds to avoid issues with the update interval missing reports
       "yyyy-MM-dd'T'HH:mm:ss'Z'"
     );
+
+    console.log('Requesting report with time:', data.time);
     //data.time = format(subWeeks(now, 100), "yyyy-MM-dd'T'HH:mm:ss'Z'");
     //console.log(data.time);
 
