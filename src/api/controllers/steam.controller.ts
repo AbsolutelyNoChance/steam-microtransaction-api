@@ -1,5 +1,5 @@
 import constants from '@src/constants';
-import DBPool, { ISubscription, ITransaction } from '@src/mysql/mysqlinterface';
+import DBPool, { ITransaction } from '@src/mysql/mysqlinterface';
 import {
   ISteamAgreement,
   ISteamOpenTransaction,
@@ -8,7 +8,6 @@ import {
   ISteamUserRequest,
   ISteamUserTicket,
 } from '@src/steam/steaminterfaces';
-import { format } from 'date-fns/format';
 import { NextFunction, Request, Response } from 'express';
 
 // Improving type annotations for errors and response objects

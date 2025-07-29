@@ -23,7 +23,7 @@ import { format } from 'date-fns/format';
 import constants from '@src/constants';
 import { parse } from 'date-fns/parse';
 
-import DBPool, { ISubscription, ITransaction } from '@src/mysql/mysqlinterface';
+import DBPool, { ITransaction } from '@src/mysql/mysqlinterface';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
