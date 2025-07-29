@@ -173,6 +173,7 @@ export default {
 
       const success = data.response.result === 'OK' && data.response.params.transid;
 
+      console.log('Transaction data:', data);
       DBPool.getInstance()
         .getPool()
         .execute(
