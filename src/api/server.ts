@@ -161,7 +161,7 @@ export default (
               {
                 orderid: order.orderid,
                 steamid: order.steamid,
-                status: `"${subscriptionStatus}"`,
+                status: subscriptionStatus,
                 agreementid: order.agreementid,
                 enddate: nextPayment ? `"${nextPayment}"` : null, //formatting issues, need to quote strings for index to work properly
               } as unknown as ISubscription //need this because of the enums, I don't wanna deal with that right now

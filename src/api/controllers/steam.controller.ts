@@ -180,10 +180,10 @@ export default {
           {
             orderid: orderId,
             steamid: steamId,
-            status: `"${'active'}"`, //this is janky, I don't understand why it adds double quotes otherwise
+            status: 'active', //this is janky, I don't understand why it adds double quotes otherwise
             agreementid:
               data.response.params.agreements && data.response.params.agreements[0]?.agreementid,
-            type: `"${product.type}"`,
+            type: product.type,
             startdate: format(new Date(), 'yyyy-MM-dd'),
             enddate: format(new Date(), 'yyyy-MM-dd'),
           } as unknown as ISubscription
