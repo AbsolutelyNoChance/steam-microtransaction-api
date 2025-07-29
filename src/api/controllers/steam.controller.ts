@@ -176,11 +176,11 @@ export default {
       DBPool.getInstance()
         .getPool()
         .execute(
-          'INSERT INTO `SUBSCRIPTION`(`orderid`, `steamid`, `status`, `agreementid`, `type`, `startdate`, `enddate`) VALUES(":orderid", ":steamid", ":status", ":agreementid", ":type", ":startdate", ":enddate")',
+          'INSERT INTO `SUBSCRIPTION`(`orderid`, `steamid`, `status`, `agreementid`, `type`, `startdate`, `enddate`) VALUES(":orderid", ":steamid", :status, ":agreementid", ":type", ":startdate", ":enddate")',
           {
             orderid: orderId,
             steamid: steamId,
-            status: 'active',
+            status: 'active', //for some reason, this returns the quotes too, so no need to add them above...
             agreementid:
               data.response.params.agreements && data.response.params.agreements[0]?.agreementid,
             type: product.type,
