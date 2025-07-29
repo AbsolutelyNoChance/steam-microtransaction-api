@@ -103,11 +103,11 @@ export default (
         //console.log('Updating DB...');
 
         for (const order of report.response.params.orders) {
-          let nextPayment = order.nextpayment
+          const nextPayment = order.nextpayment
             ? format(parse(order.nextpayment, 'yyyyMMdd', new Date()), 'yyyy-MM-dd')
             : null;
 
-          let subscriptionStatus = 'failed';
+          /*let subscriptionStatus = 'failed';
 
           if (order.agreementstatus === 'Canceled' || order.agreementstatus === 'Inactive') {
             subscriptionStatus = 'cancelled';
@@ -131,6 +131,7 @@ export default (
           } else if (order.status === 'Succeeded' || order.status === 'Approved') {
             // If the order is succeeded or approved, everything is fine
           }
+          */
 
           await DBPool.getInstance()
             .getPool()
@@ -154,7 +155,7 @@ export default (
               } as unknown as ITransaction //need this because of the enums, I don't wanna deal with that right now
             );
 
-          await DBPool.getInstance()
+          /*await DBPool.getInstance()
             .getPool()
             .execute(
               'UPDATE `SUBSCRIPTION` SET `status` = :status, `enddate` = COALESCE(:enddate, enddate) WHERE `steamid` = ":steamid" AND `agreementid` = ":agreementid"',
@@ -166,7 +167,7 @@ export default (
                 enddate: nextPayment ? `"${nextPayment}"` : null, //formatting issues, need to quote strings for index to work properly
               } as unknown as ISubscription //need this because of the enums, I don't wanna deal with that right now
             );
-
+          */
         }
       })
       .catch(err => {

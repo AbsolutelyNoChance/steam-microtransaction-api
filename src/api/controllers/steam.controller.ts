@@ -173,6 +173,7 @@ export default {
 
       const success = data.response.result === 'OK' && data.response.params.transid;
 
+      /* Can't do this because the API doesn't return the needed agreementID even though it should
       console.log('Transaction data:', data);
       DBPool.getInstance()
         .getPool()
@@ -189,7 +190,7 @@ export default {
             enddate: format(new Date(), 'yyyy-MM-dd'),
           } as unknown as ISubscription
         );
-
+      */
       if (!success) {
         throw new Error(data.response?.error?.errordesc ?? 'Steam API returned unknown error');
       }
@@ -277,6 +278,8 @@ export default {
       //Solution: Use GetUserAgreementInfo to get the current status of the subscription and then read our saved GetReport transactions to get the history of the subscription.
       const data = await req.steam.steamMicrotransactionGetUserAgreementInfo(steamId);
 
+      console.log('User Agreement Info:', data);
+
       if (data.response?.result !== 'OK') {
         throw new Error(data.response?.error?.errordesc ?? 'Steam API returned unknown error');
       }
@@ -295,6 +298,8 @@ export default {
         )
         .then(([rows]) => {
           const transaction = rows as ITransaction[];
+
+          console.log('Fetched transaction:', transaction);
 
           if (transaction.length === 0) {
             res.status(200).json({
