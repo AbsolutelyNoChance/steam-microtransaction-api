@@ -144,7 +144,7 @@ export default (
             timeupdated: format(order.time, 'yyyy-MM-dd HH:mm:ss'),
             agreementid: order.agreementid,
             agreementstatus: order.agreementstatus,
-            nextpayment: nextPayment ? `"${nextPayment}"` : null, //formatting issues, need to quote strings for index to work properly
+            nextpayment: nextPayment,
             itemid: order.items.map(item => item.itemid).join(','),
             amount: order.items.map(item => item.amount).join(','),
             vat: order.items.map(item => item.vat).join(','),
