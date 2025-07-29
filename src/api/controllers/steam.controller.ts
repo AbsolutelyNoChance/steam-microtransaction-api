@@ -277,7 +277,6 @@ export default {
       //Solution: Use GetUserAgreementInfo to get the current status of the subscription and then read our saved GetReport transactions to get the history of the subscription.
       const data = await req.steam.steamMicrotransactionGetUserAgreementInfo(steamId);
 
-      console.log('User Agreement Info:', data);
 
       if (data.response?.result !== 'OK') {
         throw new Error(data.response?.error?.errordesc ?? 'Steam API returned unknown error');
@@ -285,6 +284,7 @@ export default {
 
       //There's only one agreement active at the same time (Steam guarantee)
       const agreement = data.response.params.agreements['agreement[0]'];
+      console.log('Agreement:', agreement);
 
       DBPool.getInstance()
         .getPool()

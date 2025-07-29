@@ -133,26 +133,30 @@ export default (
           }
           */
 
+          const query_data = {
+            orderid: order.orderid,
+            transid: order.transid,
+            steamid: order.steamid,
+            status: order.status,
+            currency: order.currency,
+            country: order.country,
+            timecreated: format(order.timecreated, 'yyyy-MM-dd HH:mm:ss'),
+            timeupdated: format(order.time, 'yyyy-MM-dd HH:mm:ss'),
+            agreementid: order.agreementid,
+            agreementstatus: order.agreementstatus,
+            nextpayment: nextPayment ? `"${nextPayment}"` : null, //formatting issues, need to quote strings for index to work properly
+            itemid: order.items.map(item => item.itemid).join(','),
+            amount: order.items.map(item => item.amount).join(','),
+            vat: order.items.map(item => item.vat).join(','),
+          } as unknown as ITransaction; //need this because of the enums, I don't wanna deal with that right now
+
+          console.log(query_data);
+
           await DBPool.getInstance()
             .getPool()
             .execute(
-              'REPLACE INTO `TRANSACTION`(`orderid`, `transid`, `steamid`, `status`, `currency`, `country`, `timecreated`, `timeupdated`, `agreementid`, `agreementstatus`, `nextpayment`, `itemid`, `amount`, `vat`) VALUES(":orderid", ":transid", ":steamid", ":status", ":currency", ":country", ":timecreated", ":timeupdated", ":agreementid", ":agreementstatus", :nextpayment, :itemid, :amount, :vat)',
-              {
-                orderid: order.orderid,
-                transid: order.transid,
-                steamid: order.steamid,
-                status: order.status,
-                currency: order.currency,
-                country: order.country,
-                timecreated: format(order.timecreated, 'yyyy-MM-dd HH:mm:ss'),
-                timeupdated: format(order.time, 'yyyy-MM-dd HH:mm:ss'),
-                agreementid: order.agreementid,
-                agreementstatus: order.agreementstatus,
-                nextpayment: nextPayment ? `"${nextPayment}"` : null, //formatting issues, need to quote strings for index to work properly
-                itemid: order.items.map(item => item.itemid).join(','),
-                amount: order.items.map(item => item.amount).join(','),
-                vat: order.items.map(item => item.vat).join(','),
-              } as unknown as ITransaction //need this because of the enums, I don't wanna deal with that right now
+              'REPLACE INTO `TRANSACTION`(`orderid`, `transid`, `steamid`, `status`, `currency`, `country`, `timecreated`, `timeupdated`, `agreementid`, `agreementstatus`, `nextpayment`, `itemid`, `amount`, `vat`) VALUES(:orderid, :transid, :steamid, :status, :currency, :country, :timecreated, :timeupdated, :agreementid, :agreementstatus, :nextpayment, :itemid, :amount, :vat)',
+              query_data
             );
 
           /*await DBPool.getInstance()
