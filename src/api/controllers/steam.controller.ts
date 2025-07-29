@@ -296,7 +296,11 @@ export default {
           const transaction = rows as ITransaction[];
 
           if (transaction.length === 0) {
-            res.status(200).json({ success: false, message: 'No transactions found' });
+            res.status(200).json({
+              success: false,
+              message: 'No transactions found',
+              agreementid: agreement.agreementid,
+            });
             return;
           }
 
@@ -305,7 +309,11 @@ export default {
           );
 
           if (validTransaction.length === 0) {
-            res.status(200).json({ success: false, message: 'No valid transactions found' });
+            res.status(200).json({
+              success: false,
+              message: 'No valid transactions found',
+              agreementid: agreement.agreementid,
+            });
             return;
           }
           res.status(200).json({
