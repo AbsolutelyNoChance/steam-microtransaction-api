@@ -8,6 +8,7 @@ import {
   ISteamUserRequest,
   ISteamUserTicket,
 } from '@src/steam/steaminterfaces';
+import { parse } from 'date-fns/parse';
 import { NextFunction, Request, Response } from 'express';
 
 // Improving type annotations for errors and response objects
