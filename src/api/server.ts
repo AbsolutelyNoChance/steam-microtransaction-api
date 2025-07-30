@@ -150,7 +150,7 @@ export default (
             vat: order.items.map(item => item.vat).join(','),
           } as unknown as ITransaction; //need this because of the enums, I don't wanna deal with that right now
 
-          console.log(query_data);
+          //console.log(query_data);
 
           await DBPool.getInstance()
             .getPool()
@@ -185,7 +185,6 @@ export default (
     'minutes'
   );
   setInterval(function sync() {
-    console.log('Syncing subscription states...');
     syncSubscriptionStates().then().catch(console.error);
   }, 1000 * 60 * Number(constants.report_update_frequency)); // Gather data every X minutes
 

@@ -3,8 +3,12 @@ import { subMinutes } from 'date-fns/subMinutes';
 import { format } from 'date-fns/format';
 
 import {
-  ISteamMicroGetUserInfo,
+  ISteamAgreement,
+  ISteamAuthUserTicket,
+  ISteamMicroCancelAgreement,
   ISteamMicroGetReport,
+  ISteamMicroGetUserAgreementInfo,
+  ISteamMicroGetUserInfo,
   ISteamMicroTx,
   ISteamOpenTransaction,
   ISteamOwnershipResponse,
@@ -13,10 +17,6 @@ import {
   ISteamUserRequest,
   ISteamUserTicket,
   SteamOptions,
-  ISteamAuthUserTicket,
-  ISteamMicroGetUserAgreementInfo,
-  ISteamMicroCancelAgreement,
-  ISteamAgreement,
 } from './steaminterfaces';
 
 import { HttpClient } from '@src/lib/httpclient';
@@ -134,13 +134,18 @@ export default class SteamRequest {
   async steamMicrotransactionCancelAgreement(
     info: ISteamAgreement
   ): Promise<ISteamMicroCancelAgreement> {
-    const data = {
+    const formData = new URLSearchParams({
       key: this.options.webkey,
       steamid: info.steamId,
       appid: this.options.appId,
       agreementid: info.agreementId,
-    };
-    return await this._get<ISteamMicroCancelAgreement>(this.interface, 'CancelAgreement', 1, data);
+    });
+    return await this._post<ISteamMicroCancelAgreement>(
+      this.interface,
+      'CancelAgreement',
+      1,
+      formData
+    );
   }
 
   /**

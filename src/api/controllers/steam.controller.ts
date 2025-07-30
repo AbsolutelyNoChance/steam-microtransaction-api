@@ -1,5 +1,5 @@
 import constants from '@src/constants';
-import DBPool, { ITransaction } from '@src/mysql/mysqlinterface';
+//import DBPool, { ITransaction } from '@src/mysql/mysqlinterface';
 import {
   ISteamAgreement,
   ISteamOpenTransaction,
@@ -291,8 +291,18 @@ export default {
         });
         return;
       }
-      console.log('Agreement:', agreement);
+      //startdate for some reason is the next billing date??? Use timecreated instead
+      res.status(200).json({
+        success: true,
+        //transaction: validTransaction,
+        agreementid: agreement.agreementid,
+        type: agreement.itemid === 1030 ? 'monthly' : 'yearly',
+        status: agreement.status,
+        startdate: parse(agreement.timecreated, 'yyyyMMdd', new Date()).toISOString(),
+        nextpayment: parse(agreement.nextpayment, 'yyyyMMdd', new Date()).toISOString(),
+      });
 
+      /* TODO stopped using this because the DB is giving too many problems
       DBPool.getInstance()
         .getPool()
         .execute(
@@ -303,7 +313,6 @@ export default {
           const transaction = rows as ITransaction[];
 
           console.log('Fetched transaction:', transaction);
-          console.log('Status:', transaction[0].status);
 
           if (transaction.length === 0) {
             res.status(200).json({
@@ -340,6 +349,7 @@ export default {
           console.error('Error fetching subscriptions:', err);
           res.status(500).json({ error: 'Internal server error' });
         });
+        */
     } catch (err) {
       validateError(res, err as CustomError);
     }
