@@ -331,7 +331,7 @@ export default {
             type: agreement.itemid === 1030 ? 'monthly' : 'yearly',
             status: agreement.status,
             startdate: agreement.startdate,
-            nextpayment: agreement.nextpayment,
+            nextpayment: validTransaction[0].nextpayment.toISOString(),
           });
         })
         .catch(err => {
