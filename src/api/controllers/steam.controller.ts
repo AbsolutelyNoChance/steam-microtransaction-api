@@ -283,6 +283,13 @@ export default {
 
       //There's only one agreement active at the same time (Steam guarantee)
       const agreement = data.response.params.agreements['agreement[0]'];
+      if (!agreement) {
+        res.status(200).json({
+          success: false,
+          message: 'No agreement found',
+        });
+        return;
+      }
       console.log('Agreement:', agreement);
 
       DBPool.getInstance()
@@ -319,8 +326,12 @@ export default {
           }
           res.status(200).json({
             success: true,
-            transaction: validTransaction,
+            //transaction: validTransaction,
             agreement: agreement,
+            type: agreement.itemid === 1030 ? 'monthly' : 'yearly',
+            status: agreement.status,
+            startdate: agreement.startdate,
+            nextpayment: agreement.nextpayment,
           });
         })
         .catch(err => {
