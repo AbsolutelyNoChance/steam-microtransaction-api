@@ -23,6 +23,7 @@ const validateInitPurchase: RequestHandler = handleMissingFields([
 const validateCancelAgreement: RequestHandler = handleMissingFields(['steamId', 'agreementId']);
 const validateGetUserAgreementInfo: RequestHandler = handleMissingFields(['steamId']);
 const validateAuthentication: RequestHandler = handleMissingFields(['steamId', 'ticket']);
+const validateRetrievePrices: RequestHandler = handleMissingFields(['currency']);
 
 export default (app: Express): void => {
   const router = Router();
@@ -234,6 +235,14 @@ export default (app: Express): void => {
     '/checkPurchaseStatus',
     validateCheckPurchaseStatus,
     steamController.checkPurchaseStatus
+  );
+
+  router.post(
+    '/retrievePrices',
+    validateRetrievePrices,
+    validateAuthentication,
+    steamController.authenticateUser,
+    steamController.retrievePrices
   );
 
   // Add router to the application

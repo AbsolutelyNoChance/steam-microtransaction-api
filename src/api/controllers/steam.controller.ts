@@ -4,6 +4,7 @@ import {
   ISteamAgreement,
   ISteamOpenTransaction,
   ISteamOrder,
+  ISteamRetrievePrices,
   ISteamTransaction,
   ISteamUserRequest,
   ISteamUserTicket,
@@ -103,6 +104,31 @@ export default {
     } catch (err) {
       validateError(res, err as CustomError);
     }
+  },
+
+  retrievePrices: async (req: Request, res: Response): Promise<void> => {
+    const { currency, steamId }: ISteamRetrievePrices = req.body;
+
+    if (!currency || !steamId) {
+      res.status(400).json({ error: 'Missing fields' });
+      return;
+    }
+
+    //Compute used currency, default to USD if not found
+    let usedCurrency = 'USD';
+    const first_product = constants.products[0];
+    if (first_product.price_per_currency.has(currency)) {
+      usedCurrency = currency;
+    } else {
+      console.log(`Currency ${currency} not found, using default USD`);
+    }
+
+    const prices = {};
+    for (const product of constants.products) {
+      prices[product.id] = product.price_per_currency.get(usedCurrency);
+    }
+
+    res.status(200).json({ success: true, currency: usedCurrency, prices });
   },
 
   initPurchase: async (req: Request, res: Response): Promise<void> => {

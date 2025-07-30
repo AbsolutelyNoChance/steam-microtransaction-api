@@ -37,6 +37,10 @@ export declare interface ISteamOpenTransaction extends ISteamUserRequest {
   period?: string;
 }
 
+export declare interface ISteamRetrievePrices extends ISteamUserRequest {
+  currency: string;
+}
+
 export declare interface ISteamOwnershipResponse {
   appownership: {
     ownsapp: boolean;
