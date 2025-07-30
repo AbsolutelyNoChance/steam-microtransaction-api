@@ -303,6 +303,7 @@ export default {
           const transaction = rows as ITransaction[];
 
           console.log('Fetched transaction:', transaction);
+          console.log('Status:', transaction[0].status);
 
           if (transaction.length === 0) {
             res.status(200).json({
