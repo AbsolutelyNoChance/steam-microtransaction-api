@@ -327,11 +327,11 @@ export default {
           res.status(200).json({
             success: true,
             //transaction: validTransaction,
-            agreement: agreement,
+            agreementid: agreement.agreementid,
             type: agreement.itemid === 1030 ? 'monthly' : 'yearly',
             status: agreement.status,
-            startdate: agreement.startdate,
-            nextpayment: validTransaction[0].nextpayment.toISOString(),
+            startdate: parse(agreement.startdate, 'yyyyMMdd', new Date()).toISOString(),
+            nextpayment: parse(agreement.nextpayment, 'yyyyMMdd', new Date()).toISOString(),
           });
         })
         .catch(err => {
